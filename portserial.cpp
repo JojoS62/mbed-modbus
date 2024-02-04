@@ -35,8 +35,9 @@ static void prvvUARTTxReadyISR( void );
 static void prvvUARTRxISR( void );
 
 /* ----------------------- System Variables ---------------------------------*/
-UnbufferedSerial pc(USART3_TX, USART3_RX);    // Cam - mbed USB serial port
-
+// UnbufferedSerial pc(USART3_TX, USART3_RX);    // Cam - mbed USB serial port
+UnbufferedSerial pc(PD_5, PD_6);
+DigitalOut	rs485TxEn(PD_7, 0);
 
 /* ----------------------- Start implementation -----------------------------*/
 void
@@ -47,6 +48,23 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
      */
     pc.enable_input( xRxEnable );
     pc.enable_output( xTxEnable );
+
+    pc.format(8, SerialBase::Parity::Even);  // ugly Hack to fix enable resetting the parity setting
+
+    // if (xRxEnable) {
+    //     pc.attach( &prvvUARTRxISR, SerialBase::RxIrq ); 
+    // } else {
+    //     pc.attach( nullptr, SerialBase::RxIrq ); 
+    // }
+
+    // if (xTxEnable) {
+    //     pc.attach( &prvvUARTTxReadyISR, SerialBase::TxIrq );
+    // } else {
+    //     pc.attach( nullptr, SerialBase::TxIrq );
+    // }
+
+
+    rs485TxEn = xTxEnable ? 1 : 0;
 }
 
 BOOL
@@ -54,10 +72,31 @@ xMBPortSerialInit( UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity e
 {
     pc.enable_output( false );
     pc.enable_input( false );
+
     pc.set_blocking( false );
     pc.baud( ulBaudRate );
+
+    // convert MBParity to Mbed Parity
+    SerialBase::Parity p = SerialBase::Parity::None;
+    if (eParity == eMBParity::MB_PAR_EVEN) {
+        p = SerialBase::Parity::Even;
+        printf("parity: EVEN\n");
+    }  else if (eParity == eMBParity::MB_PAR_ODD) {
+        p = SerialBase::Parity::Odd;
+        printf("parity: ODD\n");
+    } else if (eParity == eMBParity::MB_PAR_NONE) {
+        printf("parity: NONE\n");
+    } else  {
+        printf("parity: UNKNOWN\n");
+        return FALSE;
+    }
+
+    
+    pc.format(ucDataBits, p);
+
     pc.attach( &prvvUARTTxReadyISR, SerialBase::TxIrq );
     pc.attach( &prvvUARTRxISR, SerialBase::RxIrq ); 
+    
     return TRUE;
 }
 
