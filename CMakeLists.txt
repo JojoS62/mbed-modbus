@@ -14,7 +14,6 @@ add_library(mbed-modbus STATIC
         porttimer.cpp
 )
 
-
 target_include_directories(mbed-modbus
     INTERFACE
         .
