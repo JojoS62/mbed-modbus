@@ -1,7 +1,4 @@
-add_library(mbed-modbus INTERFACE)
-
-target_sources(mbed-modbus
-    INTERFACE
+add_library(mbed-modbus STATIC
         mb.cpp
         mbcrc.cpp
         mbfunccoils.cpp
@@ -21,3 +18,9 @@ target_include_directories(mbed-modbus
     INTERFACE
         .
 )
+
+target_link_libraries(mbed-modbus 
+    PUBLIC 
+    mbed-core-flags
+) # This is needed so that the library can access Mbed includes
+
