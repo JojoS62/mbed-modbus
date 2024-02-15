@@ -32,15 +32,17 @@
 /* ----------------------- static functions ---------------------------------*/
 static void prvvTIMERExpiredISR( void );
 
+using namespace std::chrono;
+
 /* ----------------------- System Variables ---------------------------------*/
 Timeout toMBUS;             // Cam - mbed timeout
-static ULONG usInterval;    // Cam - timeout interval in microseconds 
+static microseconds usInterval;    // Cam - timeout interval in microseconds 
 
 /* ----------------------- Start implementation -----------------------------*/
 BOOL
 xMBPortTimersInit( USHORT usTim1Timerout50us )
 {
-    usInterval = 50 * usTim1Timerout50us;
+    usInterval = 50us * usTim1Timerout50us;
     return TRUE;
 }
 
@@ -53,7 +55,7 @@ vMBPortTimersEnable(  )
     // Cam - firstly detach from any existing timeout
     toMBUS.detach();
     // Cam - now attach the timeout to the prvvTIMERExpiredISR routine    
-    toMBUS.attach_us(&prvvTIMERExpiredISR, usInterval); 
+    toMBUS.attach(prvvTIMERExpiredISR, usInterval); 
 }
 
 /*inline*/ void
